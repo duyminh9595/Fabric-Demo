@@ -25,7 +25,7 @@ echo ""
 print Green "========== Generating System Genesis Block =========="
 echo ""
 
-/home/duyminh95/fabric-samples/bin/configtxgen  -configPath ./configtx/ -profile FourOrgsOrdererGenesis -channelID $SYS_CHANNEL -outputBlock ./channel-artifacts/genesis.block
+/home/ubuntu/fabric-samples/bin/configtxgen  -configPath ./configtx/ -profile FourOrgsOrdererGenesis -channelID $SYS_CHANNEL -outputBlock ./channel-artifacts/genesis.block
 
 print Green "========== System Genesis Block Generated =========="
 echo ""
@@ -33,7 +33,7 @@ echo ""
 print Green "========== Generating Channel Configuration Block =========="
 echo ""
 
-/home/duyminh95/fabric-samples/bin/configtxgen  -profile FourOrgsChannel -configPath ./configtx/ -outputCreateChannelTx ./channel-artifacts/supplychain-channel.tx -channelID $CHANNEL_NAME 
+/home/ubuntu/fabric-samples/bin/configtxgen  -profile FourOrgsChannel -configPath ./configtx/ -outputCreateChannelTx ./channel-artifacts/supplychain-channel.tx -channelID $CHANNEL_NAME 
 
 print Green "========== Channel Configuration Block Generated =========="
 echo ""
@@ -41,7 +41,7 @@ echo ""
 print Green "========== Generating Anchor Peer Update For DuyMinhOrgMSP =========="
 echo ""
 
-/home/duyminh95/fabric-samples/bin/configtxgen  -profile FourOrgsChannel -configPath ./configtx/ -outputAnchorPeersUpdate ./channel-artifacts/DuyMinhOrgMSPAnchor.tx -channelID $CHANNEL_NAME -asOrg DuyMinhOrgMSP
+/home/ubuntu/fabric-samples/bin/configtxgen  -profile FourOrgsChannel -configPath ./configtx/ -outputAnchorPeersUpdate ./channel-artifacts/DuyMinhOrgMSPAnchor.tx -channelID $CHANNEL_NAME -asOrg DuyMinhOrgMSP
 
 print Green "========== Anchor Peer Update For DuyMinhOrgMSP Sucessful =========="
 echo ""

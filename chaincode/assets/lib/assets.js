@@ -15,6 +15,7 @@ class Cs01Contract extends Contract {
     this.TxId = ctx.stub.getTxID();
     console.log(`we can do some logging for ${this.TxId}  and many more !!`)
   }
+
   //created user org duyminh
   async createUser(ctx, email, pass, name, mspid) {
     console.info('============= START : createUser ===========');
@@ -23,7 +24,7 @@ class Cs01Contract extends Contract {
       email: email,
       pass: pass,
       name: name,
-      mspid: args.mspid,
+      mspid: mspid,
     };
     console.info('============= End : createUser ===========');
     const buffer = await ctx.stub.putState(user.email, Buffer.from(JSON.stringify(user)));
@@ -31,27 +32,31 @@ class Cs01Contract extends Contract {
     and password log in to the Healthcare Network above.`
     return response;
   }
-  async createAssets(ctx, _nameasset, _datecreated, _incredient, _owner) {
 
+
+  async createAssets(ctx, _nameasset, _incredient, _owner, _description) {
+    let _keyHelper = new Date();
     // compose our model
     let model = {
       nameasset: _nameasset,
-      commission: _commission,
-      datecreated: _revenueTs,
+      datecreated: _keyHelper,
       incredient: _incredient,
+      owner: _owner,
+      description: _description,
       txId: this.TxId
     }
 
     try {
 
       // store the composite key with a the value
-      let indexName = 'year~month~txid'
+      let indexName = 'year~month~date~txid'
 
-      let _keyHelper = new Date(revenueTs)
+
       let _keyYearAsString = _keyHelper.getFullYear().toString()
       let _keyMonthAsString = _keyHelper.getMonth().toString()
+      let _keyDateAsString = _keyHelper.getDate().toString();
 
-      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, this.TxId]);
+      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, _keyDateAsString, this.TxId]);
 
       //console.info(yearMonthIndexKey, _keyYearAsString, _keyMonthAsString, this.TxId);
 
@@ -60,7 +65,7 @@ class Cs01Contract extends Contract {
 
       // compose the return values
       return {
-        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + this.TxId
+        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + _keyDateAsString + '~' + this.TxId
       };
 
     } catch (e) {
@@ -68,7 +73,7 @@ class Cs01Contract extends Contract {
     }
   }
 
-  async getCsByYearMonth(ctx) {
+  async getCsByYearMonthDate(ctx) {
 
     // we use the args option
     const args = ctx.stub.getArgs();
@@ -81,7 +86,7 @@ class Cs01Contract extends Contract {
     keyValues.forEach(element => keys.push(element))
 
     // do the query
-    let resultsIterator = await ctx.stub.getStateByPartialCompositeKey('year~month~txid', keys);
+    let resultsIterator = await ctx.stub.getStateByPartialCompositeKey('year~month~date~txid', keys);
 
     // prepare the result
     const allResults = [];
@@ -126,11 +131,11 @@ class Cs01Contract extends Contract {
     // compose the selector
     let queryString = {};
     queryString.selector = {};
-    queryString.selector.revenueTs = {
+    queryString.selector.datecreated = {
       $gt: args[1],
       $lt: args[2]
     }
-    queryString.sort = [{ "revenueTs": "asc" }]
+    queryString.sort = [{ "datecreated": "asc" }]
 
     //console.log(queryString)
     // --------------------
@@ -156,7 +161,65 @@ class Cs01Contract extends Contract {
     // return the finale result
     return JSON.stringify(allResults);
   }
+  async updateincredient(ctx, assetid, _incredient) {
+    console.info('============= START : deleteMyAsset ===========');
+    const exists = await this.myAssetExists(ctx, assetid);
+    if (!exists) {
+      throw new Error(`The my asset ${assetid} does not exist`);
+    }
+    const asset = JSON.parse(exists.toString());
+    asset.incredient = _incredient;
+    await ctx.stub.putState(assetid, Buffer.from(JSON.stringify(asset)));
+    console.info('============= END : changeAssetOwner ===========');
+  }
+  async changeOwner(ctx) {
 
+    /// we use the args option
+    const args = ctx.stub.getArgs();
+
+    // we split the key into single peaces
+    const keyValues = args[1].split('~')
+
+    // collect the keys
+    let keys = []
+    keyValues.forEach(element => keys.push(element))
+
+    // do the query
+    let resultsIterator = await ctx.stub.getStateByPartialCompositeKey('year~month~date~txid', keys);
+
+    // prepare the result
+    const allResults = [];
+    while (true) {
+      const res = await resultsIterator.next();
+
+      if (res.value) {
+
+        const asset = JSON.parse(res.value.value.toString());
+        asset.owner = "duy";
+        await ctx.stub.putState(keys, Buffer.from(JSON.stringify(asset)));
+
+      }
+
+      // check to see if we have reached then end
+      if (res.done) {
+        //console.log(res.done)
+        // explicitly close the iterator            
+        await resultsIterator.close();
+        return allResults;
+      }
+    }
+
+
+  }
+  async deleteMyAsset(ctx, _assetid) {
+    // do the query
+    let resultsIterator = await ctx.stub.getState('year~month~date~txid', _assetid);
+
+    if (!resultsIterator || resultsIterator.length === 0) {
+      throw new Error(`${_assetid} does not exist`);
+    }
+    await ctx.stub.deleteState(_assetid);
+  }
   async afterTransaction(ctx, result) {
     // default implementation is do nothing
     console.log(`TX ${this.TxId} done !!`)

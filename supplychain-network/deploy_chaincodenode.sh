@@ -112,22 +112,52 @@ queryApprovedChaincode() {
 initChaincode() {
     setEnvForDuyMinhOrg
     print Green "========== Init Chaincode on Peer0 DuyMinhOrg ========== "
+    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["createAssets","day la ten 1","resin","duyminhorg","vua moi tao xong"]}' --isInit
+
+    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["createAssets","day la ten 3","resin","duyminhorg","vua moi tao xong"]}'
+
+
+    
+
+
+    # peer chaincode query -o localhost:7050  -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME}  -c '{"Args":["getCsByTimeRange","2021-02-01T01:15:57.928Z", "2022-02-28T17:15:57.928Z"]}' | jq .
+
+    # peer chaincode invoke -o localhost:7050  -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME}  -c '{"Args":["deleteMyAsset","2021~10~27~3cf324908082cdaf4f5f9aa02723d56b053e7e9736a1055f35d07e4ede315ad3"]}' | jq .
+
     peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
     --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
-    -c '{"Args":["storeCs","100","2021-02-21T17:15:57.928Z","reco"]}' --isInit
+    -c '{"Args":["changeOwner","2021~10~27~895f06b93e70a53ff6870ec23960eada3000be1163b92acd83a4b6ba06bbb0e5"]}'
+
+    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["deleteMyAsset","2021~10~27~f79ad1a3e8abe869be468bb274d3670920d9a8866730032c591788e12287f617"]}'
+
+    # peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["getCsByYearMonthDate","2021~10~27~159bd643ba01c676c5baf8f1d40e0a152aa329bb90c4c1b2c4424d8c5d4c5a78"]}' | jq .
+
+    # peer chaincode query -o 127.0.0.1:7050  -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} -c '{"Args":["getCsByYearMonthDate","2021"]}' | jq .
     print Green "========== Init Chaincode on Peer0 DuyMinhOrg Successful ========== "
     echo ""
 }
 # initChaincode
 
-packageChaincode
-installChaincode
-queryInstalledChaincode
-approveChaincodeByDuyMinhOrg
-checkCommitReadynessForDuyMinhOrg
-commitChaincode
-queryCommittedChaincode
+# packageChaincode
+# installChaincode
+# queryInstalledChaincode
+# approveChaincodeByDuyMinhOrg
+# checkCommitReadynessForDuyMinhOrg
+# commitChaincode
+# queryCommittedChaincode
 initChaincode
 
 
