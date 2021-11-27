@@ -1,0 +1,55 @@
+{
+	"name": "test-network",
+	"version": "1.0.0",
+	"client": {
+		"tlsEnable": true,
+		"adminCredential": {
+			"id": "admin",
+			"password": "adminpw"
+		},
+		"enableAuthentication": true,
+		"organization": "DuyMinhOrgMSP",
+		"connection": {
+			"timeout": {
+				"peer": {
+					"endorser": "300"
+				},
+				"orderer": "300"
+			}
+		}
+	},
+	"channels": {
+		"supplychain-channel": {
+			"peers": {
+				"peer0.DuyMinhOrg.supplychain.com": {},
+				"peer1.DuyMinhOrg.supplychain.com": {}
+			}
+		}
+	},
+	"organizations": {
+		"DuyMinhOrgMSP": {
+			"mspid": "DuyMinhOrgMSP",
+			"adminPrivateKey": {
+				"path": "/tmp/crypto/peerOrganizations/DuyMinhOrg.supplychain.com/users/Admin@DuyMinhOrg.supplychain.com/msp/keystore/09cb9326b91faa81a42838b86b17f9750e1fcfbed57976be4087e7adcb0bb34b_sk"
+			},
+			"peers": ["peer0.DuyMinhOrg.supplychain.com","peer1.DuyMinhOrg.supplychain.com"],
+			"signedCert": {
+				"path": "/tmp/crypto/peerOrganizations/DuyMinhOrg.supplychain.com/users/Admin@DuyMinhOrg.supplychain.com/msp/signcerts/cert.pem"
+			}
+		}
+	},
+	"peers": {
+		"peer0.DuyMinhOrg.supplychain.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer0.DuyMinhOrg.supplychain.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer0.DuyMinhOrg.supplychain.com:7051"
+		},
+		"peer1.DuyMinhOrg.supplychain.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer1.DuyMinhOrg.supplychain.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer1.DuyMinhOrg.supplychain.com:8051"
+		}
+	}
+}

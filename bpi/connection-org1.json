@@ -1,0 +1,60 @@
+{
+    "name": "supplychain-network",
+    "version": "1.0.0",
+    "client": {
+        "organization": "DuyMinhOrg",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                }
+            }
+        }
+    },
+    "organizations": {
+        "DuyMinhOrg": {
+            "mspid": "DuyMinhOrgMSP",
+            "peers": [
+                "peer0.DuyMinhOrg.supplychain.com",
+                "peer1.DuyMinhOrg.supplychain.com"
+            ],
+            "certificateAuthorities": [
+                "ca.DuyMinhOrg.supplychain.com"
+            ]
+        }
+    },
+    "peers": {
+        "peer0.DuyMinhOrg.supplychain.com":{
+            "url": "grpcs://localhost:7051",
+            "grpcOption": {
+                "ssl-target-name-override": "peer0.DuyMinhOrg.supplychain.com",
+                "hostnameOverride": "peer0.DuyMinhOrg.supplychain.com"
+            },
+            "tlsCACerts": {
+                "path": "../supplychain-network/organizations/peerOrganizations/DuyMinhOrg.supplychain.com/tlsca/tlsca.DuyMinhOrg.supplychain.com-cert.pem"
+            }
+        },
+        "peer1.DuyMinhOrg.supplychain.com":{
+            "url": "grpcs://localhost:8051",
+            "grpcOption": {
+                "ssl-target-name-override": "peer1.DuyMinhOrg.supplychain.com",
+                "hostnameOverride": "peer1.DuyMinhOrg.supplychain.com"
+            },
+            "tlsCACerts": {
+                "path": "../supplychain-network/organizations/peerOrganizations/DuyMinhOrg.supplychain.com/tlsca/tlsca.DuyMinhOrg.supplychain.com-cert.pem"
+            }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.DuyMinhOrg.supplychain.com": {
+            "url": "https://localhost:7054",
+            "caName": "ca.DuyMinhOrg.supplychain.com",
+            "httpOptions": {
+                "verify": false
+            },
+            "tlsCACerts": {
+                "path": "../supplychain-network/organizations/peerOrganizations/DuyMinhOrg.supplychain.com/ca/ca.DuyMinhOrg.supplychain.com-cert.pem"
+            }
+        }
+    }
+}

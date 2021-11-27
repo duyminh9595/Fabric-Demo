@@ -1,0 +1,95 @@
+version: '2'
+
+services:
+
+  orderer.supplychain.com:
+    environment:
+      - ORDERER_GENERAL_LISTENPORT=7050
+    extends:
+      file: peer-base.yaml
+      service: orderer-base
+    volumes:
+      - ../../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer.supplychain.com/msp/:/var/hyperledger/orderer/msp
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer.supplychain.com/tls/:/var/hyperledger/orderer/tls
+      - orderer.supplychain.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 8443:8443
+
+  orderer2.supplychain.com:
+    environment: 
+      - ORDERER_GENERAL_LISTENPORT=8050
+    extends: 
+      file: peer-base.yaml
+      service: orderer-base
+    volumes: 
+      - ../../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer2.supplychain.com/msp/:/var/hyperledger/orderer/msp
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer2.supplychain.com/tls/:/var/hyperledger/orderer/tls
+      - orderer2.supplychain.com:/var/hyperledger/production/orderer
+    ports:
+      - 8050:8050
+      - 8444:8443
+
+  orderer3.supplychain.com:
+    environment: 
+      - ORDERER_GENERAL_LISTENPORT=9050
+    extends: 
+      file: peer-base.yaml
+      service: orderer-base
+    volumes: 
+      - ../../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer3.supplychain.com/msp/:/var/hyperledger/orderer/msp
+      - ../../organizations/ordererOrganizations/supplychain.com/orderers/orderer3.supplychain.com/tls/:/var/hyperledger/orderer/tls
+      - orderer3.supplychain.com:/var/hyperledger/production/orderer
+    ports:
+      - 9050:9050
+      - 8445:8443
+
+  peer0.DuyMinhOrg.supplychain.com:
+    container_name: peer0.DuyMinhOrg.supplychain.com
+    extends: 
+      file: peer-base.yaml
+      service: peer-base
+    environment: 
+      - CORE_PEER_ID=peer0.DuyMinhOrg.supplychain.com
+      - CORE_PEER_ADDRESS=peer0.DuyMinhOrg.supplychain.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.DuyMinhOrg.supplychain.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.DuyMinhOrg.supplychain.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.DuyMinhOrg.supplychain.com:7051
+      - CORE_PEER_LOCALMSPID=DuyMinhOrgMSP
+    volumes: 
+      - /var/run/:/host/var/run/
+      - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer0.DuyMinhOrg.supplychain.com/msp:/etc/hyperledger/fabric/msp
+      - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer0.DuyMinhOrg.supplychain.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.DuyMinhOrg.supplychain.com:/var/hyperledger/production
+    ports: 
+      - 7051:7051
+
+  peer1.DuyMinhOrg.supplychain.com:
+    container_name: peer1.DuyMinhOrg.supplychain.com
+    extends: 
+      file: peer-base.yaml
+      service: peer-base
+    environment: 
+      - CORE_PEER_ID=peer1.DuyMinhOrg.supplychain.com
+      - CORE_PEER_ADDRESS=peer1.DuyMinhOrg.supplychain.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.DuyMinhOrg.supplychain.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.DuyMinhOrg.supplychain.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.DuyMinhOrg.supplychain.com:8051
+      - CORE_PEER_LOCALMSPID=DuyMinhOrgMSP
+    volumes: 
+      - /var/run/:/host/var/run/
+      - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer1.DuyMinhOrg.supplychain.com/msp:/etc/hyperledger/fabric/msp
+      - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer1.DuyMinhOrg.supplychain.com/tls:/etc/hyperledger/fabric/tls
+      - peer1.DuyMinhOrg.supplychain.com:/var/hyperledger/production
+    ports: 
+      - 8051:8051
+
+ 
+    
