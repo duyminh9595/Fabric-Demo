@@ -66,6 +66,7 @@ services:
       - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer0.DuyMinhOrg.supplychain.com/msp:/etc/hyperledger/fabric/msp
       - ../../organizations/peerOrganizations/DuyMinhOrg.supplychain.com/peers/peer0.DuyMinhOrg.supplychain.com/tls:/etc/hyperledger/fabric/tls
       - peer0.DuyMinhOrg.supplychain.com:/var/hyperledger/production
+    command: peer node start --peer-chaincodedev=true
     ports: 
       - 7051:7051
 

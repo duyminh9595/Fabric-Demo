@@ -120,13 +120,13 @@ initChaincode() {
 }
 # initChaincode
 
-# packageChaincode
-# installChaincode
-# queryInstalledChaincode
-# approveChaincodeByIndonesianFarmOrg1
-# checkCommitReadynessForIndonesianFarmOrg1
-# commitChaincode
-# queryCommittedChaincode
+packageChaincode
+installChaincode
+queryInstalledChaincode
+approveChaincodeByIndonesianFarmOrg1
+checkCommitReadynessForIndonesianFarmOrg1
+commitChaincode
+queryCommittedChaincode
 # initChaincode
 
 

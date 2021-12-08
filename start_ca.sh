@@ -1,6 +1,8 @@
 #!/bin/bash
-docker rm -vf $(docker ps -aq) && docker volume prune -f
-docker network prune
+# docker rm -vf $(docker ps -aq) && docker volume prune -f
+# docker network prune
+# rm -r -f supplychain-network/channel-artifacts/*
+# rm -r -f supplychain-network/organizations/
 source ./terminal_control.sh
 
 cd ./supplychain-network/docker/

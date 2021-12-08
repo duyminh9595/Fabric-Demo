@@ -172,45 +172,7 @@ class Cs01Contract extends Contract {
     await ctx.stub.putState(assetid, Buffer.from(JSON.stringify(asset)));
     console.info('============= END : changeAssetOwner ===========');
   }
-  async changeOwner(ctx) {
 
-    /// we use the args option
-    const args = ctx.stub.getArgs();
-
-    // we split the key into single peaces
-    const keyValues = args[1].split('~')
-
-    // collect the keys
-    let keys = []
-    keyValues.forEach(element => keys.push(element))
-
-    // do the query
-    let resultsIterator = await ctx.stub.getStateByPartialCompositeKey('year~month~date~txid', keys);
-
-    // prepare the result
-    const allResults = [];
-    while (true) {
-      const res = await resultsIterator.next();
-
-      if (res.value) {
-
-        const asset = JSON.parse(res.value.value.toString());
-        asset.owner = "duy";
-        await ctx.stub.putState(keys, Buffer.from(JSON.stringify(asset)));
-
-      }
-
-      // check to see if we have reached then end
-      if (res.done) {
-        //console.log(res.done)
-        // explicitly close the iterator            
-        await resultsIterator.close();
-        return allResults;
-      }
-    }
-
-
-  }
   async deleteMyAsset(ctx, _assetid) {
     // do the query
     let resultsIterator = await ctx.stub.getState('year~month~date~txid', _assetid);
@@ -225,6 +187,284 @@ class Cs01Contract extends Contract {
     console.log(`TX ${this.TxId} done !!`)
   }
 
+
+  //register user
+  async registerUser(ctx, email, password, username, ngaysinh) {
+    const user = {
+      email,
+      password,
+      username,
+      ngaysinh,
+      balance: 0
+    };
+    await ctx.stub.putState(email, Buffer.from(JSON.stringify(user)));
+    console.info('============= END : Create User ===========');
+  }
+  //login user
+  async queryUser(ctx, email) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    console.log(userAsBytes.toString());
+    return userAsBytes.toString();
+  }
+  //add income
+  async addIncomeUser(ctx, email, income_name, amount, currency, rate_currency) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let _keyHelper = new Date();
+    const userIncome = {
+      email,
+      date_created: _keyHelper,
+      income_name,
+      amount,
+      currency,
+      rate_currency,
+      docType: 'incomeuser'
+    };
+    try {
+
+      // store the composite key with a the value
+      let indexName = 'year~month~date~txid'
+
+
+      let _keyYearAsString = _keyHelper.getFullYear().toString()
+      let _keyMonthAsString = _keyHelper.getMonth().toString()
+      let _keyDateAsString = _keyHelper.getDate().toString();
+
+      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, _keyDateAsString, this.TxId]);
+      await ctx.stub.putState(yearMonthIndexKey, Buffer.from(JSON.stringify(userIncome)));
+
+      // compose the return values
+      return {
+        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + _keyDateAsString + '~' + this.TxId
+      };
+    }
+    catch (e) {
+      throw new Error(`The tx ${this.TxId} can not be stored: ${e}`);
+    }
+  }
+  //add spending
+  async addSpendingUser(ctx, email, spend_name, amount, currency, rate_currency) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let _keyHelper = new Date();
+    const userSpending = {
+      email,
+      date_created: _keyHelper,
+      spend_name,
+      amount,
+      currency,
+      rate_currency,
+      docType: 'spendinguser'
+    };
+    try {
+
+      // store the composite key with a the value
+      let indexName = 'year~month~date~txid'
+
+
+      let _keyYearAsString = _keyHelper.getFullYear().toString()
+      let _keyMonthAsString = _keyHelper.getMonth().toString()
+      let _keyDateAsString = _keyHelper.getDate().toString();
+
+      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, _keyDateAsString, this.TxId]);
+      await ctx.stub.putState(yearMonthIndexKey, Buffer.from(JSON.stringify(userSpending)));
+
+      // compose the return values
+      return {
+        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + _keyDateAsString + '~' + this.TxId
+      };
+    }
+    catch (e) {
+      throw new Error(`The tx ${this.TxId} can not be stored: ${e}`);
+    }
+  }
+  //add target de danh
+  async addTarget(ctx, email, name_target, start_date, end_date, amount, currency, rate_currency, id) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let _keyHelper = new Date();
+    const userTarget = {
+      email,
+      name_target,
+      start_date,
+      end_date,
+      amount,
+      currency,
+      rate_currency,
+      docType: 'target',
+      id
+    };
+    try {
+
+      // store the composite key with a the value
+      let indexName = 'year~month~date~txid'
+
+
+      let _keyYearAsString = _keyHelper.getFullYear().toString()
+      let _keyMonthAsString = _keyHelper.getMonth().toString()
+      let _keyDateAsString = _keyHelper.getDate().toString();
+
+      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, _keyDateAsString, this.TxId]);
+      await ctx.stub.putState(yearMonthIndexKey, Buffer.from(JSON.stringify(userTarget)));
+
+      // compose the return values
+      return {
+        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + _keyDateAsString + '~' + this.TxId
+      };
+    }
+    catch (e) {
+      throw new Error(`The tx ${this.TxId} can not be stored: ${e}`);
+    }
+  }
+  //see all target of an email
+  async seeAllTargetEmail(ctx, email) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let queryString = {};
+    queryString.selector = {};
+    queryString.selector.docType = 'target';
+    queryString.selector.email = email;
+    let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
+    return queryResults; //shim.success(queryResults);
+  }
+  //add transaction to target
+  async addTransactionTarget(ctx, email, name_target, id_target, amount, currency, rate_currency) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let _keyHelper = new Date();
+    const userAddAmountTarget = {
+      email,
+      name_target,
+      date_created: _keyHelper,
+      amount,
+      currency,
+      rate_currency,
+      id_target
+    };
+    try {
+
+      // store the composite key with a the value
+      let indexName = 'year~month~date~txid'
+
+
+      let _keyYearAsString = _keyHelper.getFullYear().toString()
+      let _keyMonthAsString = _keyHelper.getMonth().toString()
+      let _keyDateAsString = _keyHelper.getDate().toString();
+
+      let yearMonthIndexKey = await ctx.stub.createCompositeKey(indexName, [_keyYearAsString, _keyMonthAsString, _keyDateAsString, this.TxId]);
+      await ctx.stub.putState(yearMonthIndexKey, Buffer.from(JSON.stringify(userAddAmountTarget)));
+
+      // compose the return values
+      return {
+        key: _keyYearAsString + '~' + _keyMonthAsString + '~' + _keyDateAsString + '~' + this.TxId
+      };
+    }
+    catch (e) {
+      throw new Error(`The tx ${this.TxId} can not be stored: ${e}`);
+    }
+  }
+  //see transaction to target
+  async seeTransactionHasAddedTarget(ctx, email, name_target, id_target) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let queryString = {};
+    queryString.selector = {};
+    queryString.selector.email = email;
+    queryString.selector.name_target = name_target;
+    queryString.selector.id_target = id_target;
+    let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
+    return queryResults; //shim.success(queryResults);
+  }
+  //see all user income
+  async seeAllUserIncome(ctx, email) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let queryString = {};
+    queryString.selector = {};
+    queryString.selector.docType = 'incomeuser';
+    queryString.selector.email = email;
+    let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
+    return queryResults; //shim.success(queryResults);
+  }
+  //see all user spending
+  async seeAllUserSpending(ctx, email) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let queryString = {};
+    queryString.selector = {};
+    queryString.selector.docType = 'spendinguser';
+    queryString.selector.email = email;
+    let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
+    return queryResults; //shim.success(queryResults);
+  }
+
+  async getQueryResultForQueryString(stub, queryString) {
+
+    console.info('- getQueryResultForQueryString queryString:\n' + queryString)
+    let resultsIterator = await stub.getQueryResult(queryString);
+
+    let results = await this.getAllResults(resultsIterator, false);
+
+    //return Buffer.from(JSON.stringify(results));
+    return results;
+  }
+  async getAllResults(iterator, isHistory) {
+    let allResults = [];
+    while (true) {
+      let res = await iterator.next();
+
+      if (res.value && res.value.value.toString()) {
+        let jsonRes = {};
+        console.log(res.value.value.toString('utf8'));
+
+        if (isHistory && isHistory === true) {
+          jsonRes.TxId = res.value.tx_id;
+          jsonRes.Timestamp = res.value.timestamp;
+          jsonRes.IsDelete = res.value.is_delete.toString();
+          try {
+            jsonRes.Value = JSON.parse(res.value.value.toString('utf8'));
+          } catch (err) {
+            console.log(err);
+            jsonRes.Value = res.value.value.toString('utf8');
+          }
+        } else {
+          jsonRes.Key = res.value.key;
+          try {
+            jsonRes.Record = JSON.parse(res.value.value.toString('utf8'));
+          } catch (err) {
+            console.log(err);
+            jsonRes.Record = res.value.value.toString('utf8');
+          }
+        }
+        allResults.push(jsonRes);
+      }
+      if (res.done) {
+        console.log('end of data');
+        await iterator.close();
+        console.info(allResults);
+        return allResults;
+      }
+    }
+  }
 }
 
 module.exports = Cs01Contract
