@@ -209,6 +209,17 @@ class Cs01Contract extends Contract {
     console.log(userAsBytes.toString());
     return userAsBytes.toString();
   }
+  //change balance of user
+  async changeBalanceUser(ctx, email, amount) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    const userBalance = JSON.parse(userAsBytes.toString());
+    userBalance.balance = amount;
+    await ctx.stub.putState(email, Buffer.from(JSON.stringify(userBalance)));
+    console.info('============= END : change Balance User ===========');
+  }
   //add income
   async addIncomeUser(ctx, email, income_name, amount, currency, rate_currency) {
     const userAsBytes = await ctx.stub.getState(email);
@@ -298,6 +309,7 @@ class Cs01Contract extends Contract {
       start_date,
       end_date,
       amount,
+      current_balance: 0,
       currency,
       rate_currency,
       docType: 'target',
@@ -324,6 +336,27 @@ class Cs01Contract extends Contract {
     catch (e) {
       throw new Error(`The tx ${this.TxId} can not be stored: ${e}`);
     }
+  }
+  //update amount target
+  async updateAmountTarget(ctx, id, amount) {
+    // do the query
+    let resultsIterator = await ctx.stub.getStateByPartialCompositeKey('year~month~date~txid', id);
+
+    while (true) {
+      const res = await resultsIterator.next();
+
+      if (res.value) {
+        const targetBalance = res.value.value.toString('utf8');
+        targetBalance.current_balance = amount;
+        await ctx.stub.putState(id, Buffer.from(JSON.stringify(targetBalance)));
+        return {
+          key: id
+        };
+        //console.log('V:',res.value.value.toString('utf8'))
+        //console.log('K:',res.value.key.toString('utf8'))
+      }
+    }
+
   }
   //see all target of an email
   async seeAllTargetEmail(ctx, email) {

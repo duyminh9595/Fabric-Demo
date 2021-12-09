@@ -112,10 +112,16 @@ queryApprovedChaincode() {
 initChaincode() {
     setEnvForDuyMinhOrg
     print Green "========== Init Chaincode on Peer0 DuyMinhOrg ========== "
-    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    -c '{"Args":["registerUser","duyminh95@gmail.com","123456","le quang duy minh","07/06/1995"]}' --isInit
+
+
+    # peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
     # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
-    # -c '{"Args":["registerUser","duyminh95@gmail.com","123456","le quang duy minh","07/06/1995"]}' --isInit
+    # -c '{"Args":["queryUser","alo"]}' | jq .
 
     # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
@@ -130,7 +136,7 @@ initChaincode() {
     # peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
     # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
-    # -c '{"Args":["seeAllUserIncome","duyminh95@gmail.com"]}' | jq .
+    # -c '{"Args":["seeAllUserIncome","kok@gmail"]}' | jq .
 
 
     
@@ -144,6 +150,12 @@ initChaincode() {
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
     # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
     # -c '{"Args":["addTarget","duyminh95@gmail.com","An cut","2021-01-01","2022-01-01","1000000","VND","1","123456"]}' 
+
+
+    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["updateAmountTarget","2021~11~9~f27010a0d3eed440b5cd80db81084ed7d32e07e6d01741d725696d7ca9ae8aea","100"]}' 
 
     # peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
@@ -185,13 +197,13 @@ initChaincode() {
 }
 # initChaincode
 
-# packageChaincode
-# installChaincode
-# queryInstalledChaincode
-# approveChaincodeByDuyMinhOrg
-# checkCommitReadynessForDuyMinhOrg
-# commitChaincode
-# queryCommittedChaincode
+packageChaincode
+installChaincode
+queryInstalledChaincode
+approveChaincodeByDuyMinhOrg
+checkCommitReadynessForDuyMinhOrg
+commitChaincode
+queryCommittedChaincode
 initChaincode
 
 
