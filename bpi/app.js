@@ -11,6 +11,8 @@ const { Gateway, Wallets } = require('fabric-network')
 const path = require('path')
 const fs = require('fs')
 const { error } = require('console')
+const bcrypt = require('bcrypt')
+
 
 
 const cors = require('cors');
@@ -40,7 +42,7 @@ app.set('secret', 'thisismysecret');
 app.use(expressJWT({
     secret: 'thisismysecret'
 }).unless({
-    path: ['/', '/api/registerenrolluserorg1/', '/login', '/register']
+    path: ['/main', '/login', '/register/']
 }));
 app.use(bearerToken());
 
@@ -76,7 +78,7 @@ app.use((req, res, next) => {
 
 
 
-app.get('/', async function (req, res) {
+app.get('/main', async function (req, res) {
     try {
         console.log("Test Pass!..")
         res.status(200).json({ response: "Test Pass!..." })
@@ -150,10 +152,12 @@ app.post('/register/', async function (req, res) {
             // Get the contract from the network.
             const contract = network.getContract('supplychain')
             let result;
+            var salt = bcrypt.genSaltSync(10)
+            var hash = bcrypt.hashSync(req.body.password, salt)
             result = await contract.submitTransaction(
                 'registerUser',
                 req.body.username,
-                req.body.password,
+                hash,
                 "",
                 ""
             )
@@ -243,17 +247,320 @@ app.post('/login', async function (req, res) {
                 result = JSON.parse(result.toString());
                 // const contract = network.getContract('supplychain')
 
-                console.log(result.b);
+                console.log(result);
+                var salt = bcrypt.genSaltSync(10)
+                var hash = bcrypt.hashSync(req.body.password, salt)
+                var check = bcrypt.compareSync(req.body.password, result.password);
+                console.log(check)
+                if (check) {
+                    var token = jwt.sign({
+                        exp: Math.floor(Date.now() / 1000) + parseInt(constants.jwt_expiretime),
+                        username: username
+                    }, app.get('secret'));
+                    res.status(200).json({
+                        result: token,
+                        error: "Thành công"
+                    })
+                }
+                else {
+                    res.status(403).json({
+                        error: "Sai email or mk"
+                    })
+                }
 
-                var token = jwt.sign({
-                    exp: Math.floor(Date.now() / 1000) + parseInt(constants.jwt_expiretime),
-                    username: username
-                }, app.get('secret'));
-                res.status(200).json({
-                    result: token,
-                    error: "Hello"
+            } catch (error) {
+                console.error(`Failed to evaluate transaction: ${error}`)
+                res.status(501).json({
+                    result: error,
+                    error: error.message
+                })
+            }
+
+
+        }
+    } catch (error) {
+        console.error(`Failed to evaluate transaction: ${error}`)
+        res.status(501).json({
+            result: null,
+            error: error.message
+        })
+    }
+})
+app.get('/api/info', async function (req, res) {
+    try {
+        const username = req.username
+
+        // load the network configuration
+        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'walletOrg1')
+        const wallet = await Wallets.newFileSystemWallet(walletPath)
+        console.log(`Wallet path: ${walletPath}`)
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.get(username)
+        if (!identity) {
+            console.log(`An identity for the user ${username} does not exist in the wallet`)
+            console.log('Run the registerUser.js application before retrying')
+            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+            return
+        }
+        else {
+            try {
+
+                // load the network configuration
+                const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+                const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+                // Create a new file system based wallet for managing identities.
+                const walletPath = path.join(process.cwd(), 'walletOrg1')
+                const wallet = await Wallets.newFileSystemWallet(walletPath)
+                console.log(`Wallet path: ${walletPath}`)
+
+                // Check to see if we've already enrolled the user.
+                const identity = await wallet.get(username)
+                if (!identity) {
+                    console.log(`An identity for the user ${username} does not exist in the wallet`)
+                    console.log('Run the registerUser.js application before retrying')
+                    throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+                    return
+                }
+                // Create a new gateway for connecting to our peer node.
+                const gateway = new Gateway()
+                await gateway.connect(ccp, {
+                    wallet,
+                    identity: username,
+                    discovery: {
+                        enabled: true,
+                        asLocalhost: true
+                    }
                 })
 
+                // Get the network (channel) our contract is deployed to.
+                const network = await gateway.getNetwork('supplychain-channel')
+
+                // Get the contract from the network.
+                const contract = network.getContract('supplychain')
+                let result;
+                result = await contract.submitTransaction(
+                    'queryUser', username
+                )
+                result = JSON.parse(result.toString());
+                // const contract = network.getContract('supplychain')
+
+                console.log(result);
+                res.status(200).json({
+                    data: result,
+                    error: "Thành công"
+                })
+
+            } catch (error) {
+                console.error(`Failed to evaluate transaction: ${error}`)
+                res.status(501).json({
+                    result: error,
+                    error: error.message
+                })
+            }
+
+
+        }
+    } catch (error) {
+        console.error(`Failed to evaluate transaction: ${error}`)
+        res.status(501).json({
+            result: null,
+            error: error.message
+        })
+    }
+})
+app.post('/api/changepassword', async function (req, res) {
+    try {
+        const username = req.username
+
+        // load the network configuration
+        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'walletOrg1')
+        const wallet = await Wallets.newFileSystemWallet(walletPath)
+        console.log(`Wallet path: ${walletPath}`)
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.get(username)
+        if (!identity) {
+            console.log(`An identity for the user ${username} does not exist in the wallet`)
+            console.log('Run the registerUser.js application before retrying')
+            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+            return
+        }
+        else {
+            try {
+
+                // load the network configuration
+                const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+                const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+                // Create a new file system based wallet for managing identities.
+                const walletPath = path.join(process.cwd(), 'walletOrg1')
+                const wallet = await Wallets.newFileSystemWallet(walletPath)
+                console.log(`Wallet path: ${walletPath}`)
+
+                // Check to see if we've already enrolled the user.
+                const identity = await wallet.get(username)
+                if (!identity) {
+                    console.log(`An identity for the user ${username} does not exist in the wallet`)
+                    console.log('Run the registerUser.js application before retrying')
+                    throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+                    return
+                }
+                // Create a new gateway for connecting to our peer node.
+                const gateway = new Gateway()
+                await gateway.connect(ccp, {
+                    wallet,
+                    identity: username,
+                    discovery: {
+                        enabled: true,
+                        asLocalhost: true
+                    }
+                })
+
+                // Get the network (channel) our contract is deployed to.
+                const network = await gateway.getNetwork('supplychain-channel')
+
+                // Get the contract from the network.
+                const contract = network.getContract('supplychain')
+                let result;
+                result = await contract.submitTransaction(
+                    'queryUser', username
+                )
+                result = JSON.parse(result.toString());
+
+
+                // console.log(result);
+                var salt = bcrypt.genSaltSync(10)
+                var check = bcrypt.compareSync(req.body.password, result.password);
+                var hasnew = bcrypt.hashSync(req.body.newpassword, salt);
+                // let kq;
+                if (check) {
+                    result = await contract.submitTransaction(
+                        'changePassword',
+                        username,
+                        hasnew
+                    )
+                    res.status(200).json({
+                        result: result,
+                        error: "Thành công"
+                    })
+                }
+                else {
+                    res.status(403).json({
+                        error: "Sai mk"
+                    })
+                }
+
+                // console.log(check)
+                // if (check) {
+
+
+                //     res.status(200).json({
+                //         result: token,
+                //         error: "Thành công"
+                //     })
+                // }
+                // else {
+                //     res.status(403).json({
+                //         error: "Sai email or mk"
+                //     })
+                // }
+
+            } catch (error) {
+                console.error(`Failed to evaluate transaction: ${error}`)
+                res.status(501).json({
+                    result: error,
+                    error: error.message
+                })
+            }
+
+
+        }
+    } catch (error) {
+        console.error(`Failed to evaluate transaction: ${error}`)
+        res.status(501).json({
+            result: null,
+            error: error.message
+        })
+    }
+})
+app.post('/api/changeinfo', async function (req, res) {
+    try {
+        const username = req.username
+
+        // load the network configuration
+        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'walletOrg1')
+        const wallet = await Wallets.newFileSystemWallet(walletPath)
+        console.log(`Wallet path: ${walletPath}`)
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.get(username)
+        if (!identity) {
+            console.log(`An identity for the user ${username} does not exist in the wallet`)
+            console.log('Run the registerUser.js application before retrying')
+            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+            return
+        }
+        else {
+            try {
+
+                // load the network configuration
+                const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+                const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+                // Create a new file system based wallet for managing identities.
+                const walletPath = path.join(process.cwd(), 'walletOrg1')
+                const wallet = await Wallets.newFileSystemWallet(walletPath)
+                console.log(`Wallet path: ${walletPath}`)
+
+                // Check to see if we've already enrolled the user.
+                const identity = await wallet.get(username)
+                if (!identity) {
+                    console.log(`An identity for the user ${username} does not exist in the wallet`)
+                    console.log('Run the registerUser.js application before retrying')
+                    throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+                    return
+                }
+                // Create a new gateway for connecting to our peer node.
+                const gateway = new Gateway()
+                await gateway.connect(ccp, {
+                    wallet,
+                    identity: username,
+                    discovery: {
+                        enabled: true,
+                        asLocalhost: true
+                    }
+                })
+
+                // Get the network (channel) our contract is deployed to.
+                const network = await gateway.getNetwork('supplychain-channel')
+
+                // Get the contract from the network.
+                const contract = network.getContract('supplychain')
+                // const contract = network.getContract('supplychain')
+                let kq = await contract.submitTransaction(
+                    'changeUserInfo',
+                    username,
+                    req.body.ngaysinh,
+                    req.body.username,
+                )
+                res.status(200).json({
+                    result: kq,
+                    error: "Thành công"
+                })
 
             } catch (error) {
                 console.error(`Failed to evaluate transaction: ${error}`)
@@ -318,7 +625,8 @@ app.post('/api/adduserincome', async function (req, res) {
             req.body.description,
             req.body.amount,
             req.body.currency,
-            "1"
+            "1",
+            req.body.id_income
         )
 
         result = JSON.parse(result.toString());
@@ -331,15 +639,7 @@ app.post('/api/adduserincome', async function (req, res) {
         resultUser = JSON.parse(resultUser.toString());
         // const contract = network.getContract('supplychain')
 
-        let updatedBalance = parseInt(resultUser.balance) + parseInt(req.body.amount, 10);
-        console.log(parseInt(updatedBalance, 10));
 
-        let resultUpdate;
-        resultUpdate = await contract.submitTransaction(
-            'changeBalanceUser',
-            username,
-            parseInt(updatedBalance, 10)
-        )
 
         res.status(201).json({
             result: "Thành công",
@@ -413,6 +713,67 @@ app.get('/api/seealluserincome', async function (req, res) {
         })
     }
 })
+app.post('/api/seeuserincomeid', async function (req, res) {
+    try {
+        const username = req.username
+
+        // load the network configuration
+        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'walletOrg1')
+        const wallet = await Wallets.newFileSystemWallet(walletPath)
+        console.log(`Wallet path: ${walletPath}`)
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.get(username)
+        if (!identity) {
+            console.log(`An identity for the user ${username} does not exist in the wallet`)
+            console.log('Run the registerUser.js application before retrying')
+            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+            return
+        }
+
+        // Create a new gateway for connecting to our peer node.
+        const gateway = new Gateway()
+        await gateway.connect(ccp, {
+            wallet,
+            identity: username,
+            discovery: {
+                enabled: true,
+                asLocalhost: true
+            }
+        })
+
+        // Get the network (channel) our contract is deployed to.
+        const network = await gateway.getNetwork('supplychain-channel')
+
+        // Get the contract from the network.
+        const contract = network.getContract('supplychain')
+        let result;
+        result = await contract.submitTransaction(
+            'seeAllUserSpendingBaseIncomeId',
+            username,
+            req.body.id
+        )
+
+        result = JSON.parse(result.toString());
+        // const contract = network.getContract('supplychain')
+
+
+        res.status(201).json({
+            result: result,
+            error: null
+        })
+    } catch (error) {
+        console.error(`Failed to evaluate transaction: ${error}`)
+        res.status(501).json({
+            result: error,
+            error: error.message
+        })
+    }
+})
 app.post('/api/adduserspending', async function (req, res) {
     try {
         const username = req.username
@@ -458,7 +819,69 @@ app.post('/api/adduserspending', async function (req, res) {
             req.body.description,
             req.body.amount,
             req.body.currency,
-            "1"
+            "1",
+            req.body.id_spending
+        )
+
+        result = JSON.parse(result.toString());
+        // const contract = network.getContract('supplychain')
+
+
+        res.status(201).json({
+            result: result,
+            error: null
+        })
+    } catch (error) {
+        console.error(`Failed to evaluate transaction: ${error}`)
+        res.status(501).json({
+            result: error,
+            error: error.message
+        })
+    }
+})
+app.post('/api/seeuserspendingid', async function (req, res) {
+    try {
+        const username = req.username
+
+        // load the network configuration
+        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'walletOrg1')
+        const wallet = await Wallets.newFileSystemWallet(walletPath)
+        console.log(`Wallet path: ${walletPath}`)
+
+        // Check to see if we've already enrolled the user.
+        const identity = await wallet.get(username)
+        if (!identity) {
+            console.log(`An identity for the user ${username} does not exist in the wallet`)
+            console.log('Run the registerUser.js application before retrying')
+            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
+            return
+        }
+
+        // Create a new gateway for connecting to our peer node.
+        const gateway = new Gateway()
+        await gateway.connect(ccp, {
+            wallet,
+            identity: username,
+            discovery: {
+                enabled: true,
+                asLocalhost: true
+            }
+        })
+
+        // Get the network (channel) our contract is deployed to.
+        const network = await gateway.getNetwork('supplychain-channel')
+
+        // Get the contract from the network.
+        const contract = network.getContract('supplychain')
+        let result;
+        result = await contract.submitTransaction(
+            'seeAllUserSpendingBaseSpendingId',
+            username,
+            req.body.id
         )
 
         result = JSON.parse(result.toString());
@@ -706,7 +1129,6 @@ app.post('/api/addusertransactiontotarget', async function (req, res) {
         result = await contract.submitTransaction(
             'addTransactionTarget',
             username,
-            req.body.name_target,
             req.body.id_target,
             req.body.amount,
             req.body.currency,
@@ -771,7 +1193,6 @@ app.post('/api/seehistorytransactionhasaddedtarget', async function (req, res) {
         result = await contract.submitTransaction(
             'seeTransactionHasAddedTarget',
             username,
-            req.body.name_target,
             req.body.id_target,
 
         )
@@ -794,190 +1215,6 @@ app.post('/api/seehistorytransactionhasaddedtarget', async function (req, res) {
 })
 
 
-
-app.post('/api/taomathang', async function (req, res) {
-    try {
-        const username = req.username
-
-        // load the network configuration
-        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(process.cwd(), 'walletOrg1')
-        const wallet = await Wallets.newFileSystemWallet(walletPath)
-        console.log(`Wallet path: ${walletPath}`)
-
-        // Check to see if we've already enrolled the user.
-        const identity = await wallet.get(username)
-        if (!identity) {
-            console.log(`An identity for the user ${username} does not exist in the wallet`)
-            console.log('Run the registerUser.js application before retrying')
-            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
-            return
-        }
-
-        // Create a new gateway for connecting to our peer node.
-        const gateway = new Gateway()
-        await gateway.connect(ccp, {
-            wallet,
-            identity: username,
-            discovery: {
-                enabled: true,
-                asLocalhost: true
-            }
-        })
-
-        // Get the network (channel) our contract is deployed to.
-        const network = await gateway.getNetwork('supplychain-channel')
-
-        // Get the contract from the network.
-        const contract = network.getContract('supplychain')
-        let result;
-        result = await contract.submitTransaction(
-            'storeCs',
-            req.body.id,
-            req.body.date,
-            req.body.type
-        )
-
-        result = JSON.parse(result.toString());
-        // const contract = network.getContract('supplychain')
-
-
-        res.status(201).json({
-            result: result,
-            error: null
-        })
-    } catch (error) {
-        console.error(`Failed to evaluate transaction: ${error}`)
-        res.status(501).json({
-            result: error,
-            error: error.message
-        })
-    }
-})
-app.post('/api/getmathangtheonamthang', async function (req, res) {
-    try {
-        const username = req.username
-
-        // load the network configuration
-        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(process.cwd(), 'walletOrg1')
-        const wallet = await Wallets.newFileSystemWallet(walletPath)
-        console.log(`Wallet path: ${walletPath}`)
-
-        // Check to see if we've already enrolled the user.
-        const identity = await wallet.get(username)
-        if (!identity) {
-            console.log(`An identity for the user ${username} does not exist in the wallet`)
-            console.log('Run the registerUser.js application before retrying')
-            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
-            return
-        }
-
-        // Create a new gateway for connecting to our peer node.
-        const gateway = new Gateway()
-        await gateway.connect(ccp, {
-            wallet,
-            identity: username,
-            discovery: {
-                enabled: true,
-                asLocalhost: true
-            }
-        })
-
-        // Get the network (channel) our contract is deployed to.
-        const network = await gateway.getNetwork('supplychain-channel')
-
-        // Get the contract from the network.
-        const contract = network.getContract('supplychain')
-        let result;
-        result = await contract.submitTransaction(
-            'getCsByYearMonth',
-            req.body.date
-        )
-
-        result = JSON.parse(result.toString());
-        // const contract = network.getContract('supplychain')
-
-
-        res.status(201).json({
-            result: result,
-            error: null
-        })
-    } catch (error) {
-        console.error(`Failed to evaluate transaction: ${error}`)
-        res.status(501).json({
-            result: error,
-            error: error.message
-        })
-    }
-})
-app.post('/api/changeowner', async function (req, res) {
-    try {
-        const username = req.username
-
-        // load the network configuration
-        const ccpPath = path.resolve(__dirname, 'connection-org1.json')
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf-8'))
-
-        // Create a new file system based wallet for managing identities.
-        const walletPath = path.join(process.cwd(), 'walletOrg1')
-        const wallet = await Wallets.newFileSystemWallet(walletPath)
-        console.log(`Wallet path: ${walletPath}`)
-
-        // Check to see if we've already enrolled the user.
-        const identity = await wallet.get(username)
-        if (!identity) {
-            console.log(`An identity for the user ${username} does not exist in the wallet`)
-            console.log('Run the registerUser.js application before retrying')
-            throw new Error(`An identity for the user ${username.toUpperCase()} does not exist in the wallet`)
-            return
-        }
-
-        // Create a new gateway for connecting to our peer node.
-        const gateway = new Gateway()
-        await gateway.connect(ccp, {
-            wallet,
-            identity: username,
-            discovery: {
-                enabled: true,
-                asLocalhost: true
-            }
-        })
-
-        // Get the network (channel) our contract is deployed to.
-        const network = await gateway.getNetwork('supplychain-channel')
-
-        // Get the contract from the network.
-        const contract = network.getContract('supplychain')
-        let result;
-        result = await contract.submitTransaction(
-            'changeCarOwner',
-            req.body.id,
-            req.body.owner
-        )
-
-        result = JSON.parse(result.toString());
-        // const contract = network.getContract('supplychain')
-
-
-        res.status(201).json({
-            result: result,
-            error: null
-        })
-    } catch (error) {
-        console.error(`Failed to evaluate transaction: ${error}`)
-        res.status(501).json({
-            result: error,
-            error: error.message
-        })
-    }
-})
 app.post('/api/gethistory', async function (req, res) {
     try {
         const username = req.username
@@ -1038,5 +1275,5 @@ app.post('/api/gethistory', async function (req, res) {
         })
     }
 })
-app.listen(8081, 'localhost');
-console.log('Indonesian Farm Organization 1 running on http://localhost:8081');
+app.listen(8080, 'localhost');
+console.log('Test running on http://localhost:8080');
