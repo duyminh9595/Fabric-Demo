@@ -258,7 +258,8 @@ class Cs01Contract extends Contract {
       currency,
       rate_currency,
       docType: 'incomeuser',
-      id_income
+      id_income,
+      type: 'add'
     };
     try {
 
@@ -301,7 +302,8 @@ class Cs01Contract extends Contract {
       currency,
       rate_currency,
       docType: 'spendinguser',
-      id_spending
+      id_spending,
+      type: 'add'
     };
     try {
 
@@ -502,7 +504,32 @@ class Cs01Contract extends Contract {
     let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
     return queryResults; //shim.success(queryResults);
   }
-
+  //see all include spending and income
+  async seeAllUserTransaction(ctx, email) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    let queryString = {};
+    queryString.selector = {};
+    queryString.selector.email = email;
+    queryString.selector.type = 'add'
+    let queryResults = await this.getQueryResultForQueryString(ctx.stub, JSON.stringify(queryString));
+    return queryResults; //shim.success(queryResults);
+  }
+  //see infor target id
+  async seeInforTarget(ctx, email, targetid) {
+    const userAsBytes = await ctx.stub.getState(email);
+    if (!userAsBytes || userAsBytes.length === 0) {
+      throw new Error(`${userAsBytes} does not exist`);
+    }
+    const targetAsbytes = await ctx.stub.getState(targetid);
+    if (!targetAsbytes || targetAsbytes.length === 0) {
+      throw new Error(`${targetAsbytes} does not exist`);
+    }
+    console.log(targetAsbytes.toString());
+    return targetAsbytes.toString();
+  }
   async getQueryResultForQueryString(stub, queryString) {
 
     console.info('- getQueryResultForQueryString queryString:\n' + queryString)

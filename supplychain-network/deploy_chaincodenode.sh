@@ -112,10 +112,10 @@ queryApprovedChaincode() {
 initChaincode() {
     setEnvForDuyMinhOrg
     print Green "========== Init Chaincode on Peer0 DuyMinhOrg ========== "
-    # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
-    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
-    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
-    # -c '{"Args":["registerUser","duyminh95@gmail.com","123456","le quang duy minh","07/06/1995"]}' --isInit
+    peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    -c '{"Args":["registerUser","@gmail.com","123456","le quang duy minh","07/06/1995"]}' --isInit
 
     # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
@@ -123,10 +123,10 @@ initChaincode() {
     # -c '{"Args":["changePassword","kok@gmail","cuoi quyen"]}' 
 
 
-    peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
-    --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
-    --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
-    -c '{"Args":["queryUser","kok@gmail"]}' | jq .
+    # peer chaincode query -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
+    # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
+    # --peerAddresses localhost:7051 --tlsRootCertFiles ${CORE_PEER_TLS_ROOTCERT_FILE_ORG1} \
+    # -c '{"Args":["queryUser","kok@gmail"]}' | jq .
 
     # peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.supplychain.com \
     # --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA} -C ${CHANNEL_NAME} -n ${CHAINCODE_NAME} \
@@ -202,13 +202,13 @@ initChaincode() {
 }
 # initChaincode
 
-# packageChaincode
-# installChaincode
-# queryInstalledChaincode
-# approveChaincodeByDuyMinhOrg
-# checkCommitReadynessForDuyMinhOrg
-# commitChaincode
-# queryCommittedChaincode
+packageChaincode
+installChaincode
+queryInstalledChaincode
+approveChaincodeByDuyMinhOrg
+checkCommitReadynessForDuyMinhOrg
+commitChaincode
+queryCommittedChaincode
 initChaincode
 
 
